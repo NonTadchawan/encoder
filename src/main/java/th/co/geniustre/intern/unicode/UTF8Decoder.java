@@ -3,33 +3,29 @@ package th.co.geniustre.intern.unicode;
 
 public class UTF8Decoder {
     public String decode(byte[] utf8s) {
-        Unicode unicode = new Unicode();
         StringBuilder sb = new StringBuilder();
-        final Integer test1 = 0b1110_0000;
-        final Integer test2 = 0b1000_0000;
+        final int STARTER_THREE = 0b1110_0000;
+        final int MARK_START_THREE = 0b0000_1111;
+        final int MARK_FOLLOW = 0b0011_1111;
         Integer result = 0;
         Integer prev = 0;
-
-        for (int i = 0; i < utf8s.length; i++) {
-            if (test1.equals(test1 & utf8s[i])) {
-                prev = utf8s[i] & (0b0000_1111);
+        int i = 0;
+        while (true) {
+            if (STARTER_THREE == (STARTER_THREE & utf8s[i])) {
+                prev = utf8s[i] & MARK_START_THREE;
                 result = result + (prev << 12);
-            } else if (test2.equals(test2 & utf8s[i])) {
-                int i1 = utf8s[i] & (0b0011_1111);
-                if (prev <= 15) {
-                    result = result +(i1 << 6);
-                } else {
-                    result = result + i1;
-                }
-                prev = i1;
-            }
-            if ((i + 1) % 3 == 0) {
-                String st = unicode.getUnicodeChars().get(result).toString();
-                sb.append(st);
+                prev = utf8s[i + 1] & MARK_FOLLOW;
+                result = result + (prev << 6);
+                prev = utf8s[i + 2] & MARK_FOLLOW;
+                result = result + (prev);
+                sb.append(Character.toChars(result));
                 result = 0;
             }
+            i++;
+            if (i == utf8s.length - 1) {
+                break;
+            }
         }
-        System.out.println(sb);
         return sb.toString();
     }
 }
